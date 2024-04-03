@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public"]
+}
+
+// ! ---------------------------------------------------------------------------------------------------
+
+model Services {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  serviceName String @map("service_name")
+
+  sections Sections[] @relation("service-units")
+
+  @@map("services")
+  @@schema("public")
+}
+
+model Sections {
+  id                  String      @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  serviceID           String      @map("service_id") @db.Uuid
+  sectionName         String      @map("section_name")
+  sectionAbbreviation String?     @map("section_abbreviation")
+  isServiceHead       ServiceHead @default(false) @map("is_service_head")
+
+  service Services @relation("service-units", fields: [serviceID], references: [id])
+
+  units Units[] @relation("sections-units")
+
+  @@map("sections")
+  @@schema("public")
+}
+
+model Units {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  sectionID        String  @map("section_id") @db.Uuid
+  unitName         String  @map("unit_name")
+  unitAbbreviation String? @map("unit_abbreviation")
+
+  section Sections @relation("sections-units", fields: [sectionID], references: [id])
+
+  @@map("units")
+  @@schema("public")
+}
+
+enum ServiceHead {
+  true
+  false
+
+  @@schema("public")
+}
+
+// ! ---------------------------------------------------------------------------------------------------
+
+model Schedules {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  scheduleName     String  @map("schedule_name")
+  scheduleCategory String  @map("schedule_category")
+  totalHours       String  @map("total_hours")
+  firstHours       String  @map("first_hours")
+  secondHours      String? @map("second_hours")
+  firstIn          String  @map("first_in")
+  firstOut         String  @map("first_out")
+  secondIn         String? @map("second_in")
+  secondOut        String? @map("second_out")
+
+  @@map("schedules")
+  @@schema("public")
+}
+
+// ! ---------------------------------------------------------------------------------------------------
