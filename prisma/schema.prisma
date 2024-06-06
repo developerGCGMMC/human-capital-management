@@ -7,18 +7,21 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  schemas  = ["public"]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public"]
 }
 
-// ! ---------------------------------------------------------------------------------------------------
+// ! ----------------------------------------------------------------------------------------------------
 
 model Services {
   id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
   serviceName String @map("service_name")
 
-  sections Sections[] @relation("service-units")
+  sections Sections[] @relation("services-units")
+
+  employees Employees[] @relation("services-employees")
 
   @@map("services")
   @@schema("public")
@@ -31,9 +34,11 @@ model Sections {
   sectionAbbreviation String?     @map("section_abbreviation")
   isServiceHead       ServiceHead @default(false) @map("is_service_head")
 
-  service Services @relation("service-units", fields: [serviceID], references: [id])
+  service Services @relation("services-units", fields: [serviceID], references: [id])
 
   units Units[] @relation("sections-units")
+
+  employees Employees[] @relation("sections-employees")
 
   @@map("sections")
   @@schema("public")
@@ -47,6 +52,8 @@ model Units {
 
   section Sections @relation("sections-units", fields: [sectionID], references: [id])
 
+  employees Employees[] @relation("units-employees")
+
   @@map("units")
   @@schema("public")
 }
@@ -58,22 +65,433 @@ enum ServiceHead {
   @@schema("public")
 }
 
-// ! ---------------------------------------------------------------------------------------------------
+// ! ----------------------------------------------------------------------------------------------------
+
+model Employees {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  lastName        String? @map("last_name")
+  firstName       String? @map("first_name")
+  middleName      String? @map("middle_name")
+  genealogySuffix String? @map("genealogy_suffix")
+
+  appointmentStatus AppointmentStatus @default(permanent) @map("appointment_status")
+  employeeID        String?           @unique @map("employee_id")
+  biometricsNo      String?           @unique @map("biometrics_no")
+
+  activeStatus ActiveStatus @default(active) @map("active_status")
+
+  serviceID String? @map("service_id") @db.Uuid
+  sectionID String? @map("section_id") @db.Uuid
+  unitID    String? @map("unit_id") @db.Uuid
+
+  gacsID String? @map("gacs_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  users Users? @relation("employees-users")
+
+  employeeEmployment     EmployeeEmployment?     @relation("employees-employee_employment")
+  employeeProfile        EmployeeProfile?        @relation("employees-employee_profile")
+  employeeAccounts       EmployeeAccounts?       @relation("employees-employee_accounts")
+  employeeContactAddress EmployeeContactAddress? @relation("employees-employee_contact_address")
+  employeeSalary         EmployeeSalary[]        @relation("employees-employee_salary")
+
+  service Services? @relation("services-employees", fields: [serviceID], references: [id])
+  section Sections? @relation("sections-employees", fields: [sectionID], references: [id])
+  unit    Units?    @relation("units-employees", fields: [unitID], references: [id])
+
+  employeeSchedules EmployeeSchedules[] @relation("employees-employee_schedules")
+  biometricsInOut   BiometricsInOut[]   @relation("employees-biometrics_in_out")
+
+  @@unique([lastName, firstName, middleName, genealogySuffix])
+  @@map("employees")
+  @@schema("public")
+}
+
+model EmployeeEmployment {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  employeesID String @unique @map("employees_id") @db.Uuid
+
+  position                 String? @map("position")
+  professionAcademicSuffix String? @map("profession_academic_suffix")
+
+  employees Employees @relation("employees-employee_employment", fields: [employeesID], references: [id])
+
+  @@map("employee_employment")
+  @@schema("public")
+}
+
+model EmployeeProfile {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  employeesID String @unique @map("employees_id") @db.Uuid
+
+  birthDate   String? @map("birth_date")
+  birthPlace  String? @map("birth_place")
+  gender      String? @map("gender")
+  civilStatus String? @map("civil_status")
+  citizenship String? @map("citizenship")
+  height      String? @map("height")
+  weight      String? @map("weight")
+  bloodType   String? @map("blood_type")
+
+  employees Employees @relation("employees-employee_profile", fields: [employeesID], references: [id])
+
+  @@map("employee_profile")
+  @@schema("public")
+}
+
+model EmployeeAccounts {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  employeesID String @unique @map("employees_id") @db.Uuid
+
+  gsisID       String? @map("gsis_id")
+  pagibigID    String? @map("pagibig_id")
+  philhealthNo String? @map("philhealth_no")
+  sssNo        String? @map("sss_no")
+  tinNo        String? @map("tin_no")
+
+  employees Employees @relation("employees-employee_accounts", fields: [employeesID], references: [id])
+
+  @@map("employee_accounts")
+  @@schema("public")
+}
+
+model EmployeeContactAddress {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  employeesID String @unique @map("employees_id") @db.Uuid
+
+  mobileNo     String? @map("mobile_no")
+  telephoneNo  String? @map("telephone_no")
+  emailAddress String? @map("email_address")
+
+  residentialAddress      String? @map("residential_address")
+  residentialHouseNo      String? @map("residential_house_no")
+  residentialStreet       String? @map("residential_street")
+  residentialVillage      String? @map("residential_village")
+  residentialDistrict     String? @map("residential_district")
+  residentialMunicipality String? @map("residential_municipality")
+  residentialProvince     String? @map("residential_province")
+  residentialZipCode      String? @map("residential_zip_code")
+
+  permanentAddress      String? @map("permanent_address")
+  permanentHouseNo      String? @map("permanent_house_no")
+  permanentStreet       String? @map("permanent_street")
+  permanentVillage      String? @map("permanent_village")
+  permanentDistrict     String? @map("permanent_district")
+  permanentMunicipality String? @map("permanent_municipality")
+  permanentProvince     String? @map("permanent_province")
+  permanentZipCode      String? @map("permanent_zip_code")
+
+  employees Employees @relation("employees-employee_contact_address", fields: [employeesID], references: [id])
+
+  @@map("employee_contact_address")
+  @@schema("public")
+}
+
+model EmployeeSalary {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  employeesID String @map("employees_id") @db.Uuid
+
+  salaryGrade     String?  @map("salary_grade")
+  salary          String?  @map("salary")
+  step            String?  @map("step")
+  appointmentDate String?  @map("appointment_date")
+  effectiveDate   String?  @map("effective_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  employees Employees @relation("employees-employee_salary", fields: [employeesID], references: [id])
+
+  @@map("employee_salary")
+  @@schema("public")
+}
+
+enum AppointmentStatus {
+  permanent
+  contract_of_service
+  job_order
+  temporary
+
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+model Trainees {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  lastName        String  @map("last_name")
+  firstName       String  @map("first_name")
+  middleName      String? @map("middle_name")
+  genealogySuffix String? @map("genealogy_suffix")
+
+  designation  String? @map("designation")
+  traineeID    String? @unique @map("trainee_id")
+  biometricsNo String? @unique @map("biometrics_no")
+  organization String? @map("organization")
+
+  gacsID String? @map("gacs_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  users Users? @relation("trainees-users")
+
+  @@unique([lastName, firstName, middleName, genealogySuffix])
+  @@map("trainees")
+  @@schema("public")
+}
+
+model RemoteWorkers {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  lastName        String  @map("last_name")
+  firstName       String  @map("first_name")
+  middleName      String? @map("middle_name")
+  genealogySuffix String? @map("genealogy_suffix")
+
+  designation    String? @map("designation")
+  remoteWorkerID String? @unique @map("remote_worker_id")
+  biometricsNo   String? @unique @map("biometrics_no")
+  organization   String? @map("organization")
+
+  gacsID String? @map("gacs_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  users Users? @relation("remote_workers-users")
+
+  @@unique([lastName, firstName, middleName, genealogySuffix])
+  @@map("remote_workers")
+  @@schema("public")
+}
+
+model AgencyWorkers {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  lastName        String  @map("last_name")
+  firstName       String  @map("first_name")
+  middleName      String? @map("middle_name")
+  genealogySuffix String? @map("genealogy_suffix")
+
+  designation    String? @map("designation")
+  agencyWorkerID String? @unique @map("agency_worker_id")
+  biometricsNo   String? @unique @map("biometrics_no")
+  organization   String? @map("organization")
+
+  gacsID String? @map("gacs_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  users Users? @relation("agency_workers-users")
+
+  @@unique([lastName, firstName, middleName, genealogySuffix])
+  @@map("agency_workers")
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+model Users {
+  id        String  @id @map("id") @db.Uuid
+  userEmail String? @map("user_email")
+
+  userType       UserType @default(employee) @map("user_type")
+  employeeID     String?  @unique @map("employee_id") @db.Uuid
+  traineeID      String?  @unique @map("trainee_id") @db.Uuid
+  remoteWorkerID String?  @unique @map("remote_worker_id") @db.Uuid
+  agencyWorkerID String?  @unique @map("agency_worker_id") @db.Uuid
+
+  activeStatus ActiveStatus @default(active) @map("active_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  employee     Employees?     @relation("employees-users", fields: [employeeID], references: [id])
+  trainee      Trainees?      @relation("trainees-users", fields: [traineeID], references: [id])
+  remoteWorker RemoteWorkers? @relation("remote_workers-users", fields: [remoteWorkerID], references: [id])
+  agencyWorker AgencyWorkers? @relation("agency_workers-users", fields: [agencyWorkerID], references: [id])
+
+  @@map("users")
+  @@schema("public")
+}
+
+enum UserType {
+  employee
+  trainee
+  remote_worker
+  agency_worker
+
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
 
 model Schedules {
-  id               String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  scheduleName     String  @map("schedule_name")
-  scheduleCategory String  @map("schedule_category")
-  totalHours       String  @map("total_hours")
-  firstHours       String  @map("first_hours")
-  secondHours      String? @map("second_hours")
-  firstIn          String  @map("first_in")
-  firstOut         String  @map("first_out")
-  secondIn         String? @map("second_in")
-  secondOut        String? @map("second_out")
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  scheduleName     String       @map("schedule_name")
+  scheduleCategory String       @map("schedule_category")
+  totalHours       String       @map("total_hours")
+  firstHours       String       @map("first_hours")
+  secondHours      String?      @map("second_hours")
+  firstIn          String       @map("first_in")
+  firstOut         String       @map("first_out")
+  secondIn         String?      @map("second_in")
+  secondOut        String?      @map("second_out")
+  activeStatus     ActiveStatus @default(active) @map("active_status")
+
+  employeeSchedules EmployeeSchedules[] @relation("schedules-employee_schedules")
 
   @@map("schedules")
   @@schema("public")
 }
 
-// ! ---------------------------------------------------------------------------------------------------
+// ! ----------------------------------------------------------------------------------------------------
+
+model Holidays {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  holidayDate   String      @map("holiday_date")
+  holidayName   String      @map("holiday_name")
+  holidayType   HolidayType @default(regular_holiday) @map("holiday_type")
+  holidayPeriod DayPeriod   @default(whole_day) @map("holiday_period")
+
+  @@map("holidays")
+  @@schema("public")
+}
+
+enum HolidayType {
+  regular_holiday
+  special_non_working_holiday
+  special_working_holiday
+
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+model Leaves {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  leaveCode        String          @map("leave_code")
+  leaveName        String          @map("leave_name")
+  limitDays        Int?            @default(0) @map("limit_days")
+  isFixedLimitDays BooleanType     @default(false) @map("is_fixed_limit_days")
+  genderApplicant  GenderApplicant @default(both) @map("gender_applicant")
+  activeStatus     ActiveStatus    @default(active) @map("active_status")
+
+  @@map("leaves")
+  @@schema("public")
+}
+
+enum GenderApplicant {
+  male
+  female
+  both
+
+  @@schema("public")
+}
+
+model OfficialTimes {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  officialTimeCode String       @map("offical_time_code")
+  officialTimeName String       @map("offical_time_name")
+  activeStatus     ActiveStatus @default(active) @map("active_status")
+
+  @@map("official_times")
+  @@schema("public")
+}
+
+model WorkSuspensions {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  workSuspensionCode String       @map("work_suspension_code")
+  workSuspensionName String       @map("work_suspension_name")
+  activeStatus       ActiveStatus @default(active) @map("active_status")
+
+  @@map("work_suspensions")
+  @@schema("public")
+}
+
+model ReplacementOffs {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  replacementOffCode String       @map("replacement_off_code")
+  replacementOffName String       @map("replacement_off_name")
+  activeStatus       ActiveStatus @default(active) @map("active_status")
+
+  @@map("replacement_offs")
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+model EmployeeSchedules {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  employeesID  String   @map("employees_id") @db.Uuid
+  scheduleID   String   @map("schedule_id") @db.Uuid
+  scheduleDate String   @map("schedule_date")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  employees Employees  @relation("employees-employee_schedules", fields: [employeesID], references: [id])
+  schedules Schedules? @relation("schedules-employee_schedules", fields: [scheduleID], references: [id])
+
+  @@unique([employeesID, scheduleID, scheduleDate])
+  @@map("employee_schedules")
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+model BiometricsInOut {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  biometricsNo String @map("biometrics_no")
+  checkTime    String @map("check_time")
+  checkType    String @map("check_type")
+
+  employees Employees? @relation("employees-biometrics_in_out", fields: [biometricsNo], references: [biometricsNo])
+
+  @@unique([biometricsNo, checkTime, checkType])
+  @@map("biometrics_in_out")
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+enum ActiveStatus {
+  active
+  inactive
+
+  @@schema("public")
+}
+
+enum BooleanType {
+  true
+  false
+
+  @@schema("public")
+}
+
+enum DayPeriod {
+  am
+  pm
+  whole_day
+
+  @@schema("public")
+}
+
+// ! ----------------------------------------------------------------------------------------------------
+
+model UserInfo {
+  userID  Int @id @map("user_id")
+  badgeNo Int @map("badge_no")
+
+  @@map("xx_user_info")
+  @@schema("public")
+}
+
+model CheckInOut {
+  id           Int     @id @default(autoincrement())
+  userID       Int     @map("user_id")
+  checkTime    String  @map("check_time")
+  checkType    String  @map("check_type")
+  biometricsNo String? @map("biometrics_no")
+
+  @@unique([userID, checkTime, checkType, biometricsNo])
+  @@map("xx_check_in_out")
+  @@schema("public")
+}

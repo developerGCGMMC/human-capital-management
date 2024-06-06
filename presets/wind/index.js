@@ -1,6 +1,7 @@
 import global from './global.js';
 import autocomplete from './autocomplete';
 import calendar from './calendar';
+import cascadeselect from './cascadeselect';
 import checkbox from './checkbox';
 import chips from './chips';
 import colorpicker from './colorpicker';
@@ -27,9 +28,12 @@ import button from './button';
 import splitbutton from './splitbutton';
 import datatable from './datatable';
 import dataview from './dataview';
+import orderlist from './orderlist';
 import organizationchart from './organizationchart';
 import paginator from './paginator';
+import picklist from './picklist';
 import tree from './tree';
+import treetable from './treetable';
 import accordion from './accordion';
 import card from './card';
 import divider from './divider';
@@ -45,10 +49,13 @@ import sidebar from './sidebar';
 import tooltip from './tooltip';
 import breadcrumb from './breadcrumb';
 import contextmenu from './contextmenu';
+import dock from './dock';
 import menu from './menu';
 import menubar from './menubar';
+import megamenu from './megamenu';
 import panelmenu from './panelmenu';
 import steps from './steps';
+import tabmenu from './tabmenu';
 import tieredmenu from './tieredmenu';
 import message from './message';
 import inlinemessage from './inlinemessage';
@@ -62,6 +69,7 @@ import skeleton from './skeleton';
 import progressbar from './progressbar';
 import ripple from './ripple';
 import tag from './tag';
+import terminal from './terminal';
 
 export default {
     global,
@@ -72,6 +80,7 @@ export default {
     },
     autocomplete,
     calendar,
+    cascadeselect,
     checkbox,
     chips,
     colorpicker,
@@ -98,9 +107,12 @@ export default {
     splitbutton,
     datatable,
     dataview,
+    orderlist,
     organizationchart,
     paginator,
+    picklist,
     tree,
+    treetable,
     accordion,
     card,
     divider,
@@ -115,10 +127,13 @@ export default {
     sidebar,
     breadcrumb,
     contextmenu,
+    dock,
     menu,
     menubar,
+    megamenu,
     panelmenu,
     steps,
+    tabmenu,
     tieredmenu,
     message,
     inlinemessage,
@@ -129,5 +144,6 @@ export default {
     scrolltop,
     skeleton,
     progressbar,
-    tag
+    tag,
+    terminal
 }
