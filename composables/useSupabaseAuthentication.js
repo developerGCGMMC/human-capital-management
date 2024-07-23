@@ -10,7 +10,7 @@ export default function useSupabaseAuthentication() {
 
             if(error) throw error;
 
-            console.info(data);
+            // console.info(data);
 
             return {
                 status: 'success',
@@ -37,7 +37,7 @@ export default function useSupabaseAuthentication() {
 
             if(error) throw error;
 
-            console.info(data);
+            // console.info(data);
 
             return {
                 status: 'success',

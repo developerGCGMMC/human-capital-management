@@ -12,6 +12,10 @@ export default defineNuxtConfig({
 
     DATABASE_URL: process.env.DATABASE_URL,
 
+    HIVEMQ_USERNAME: process.env.HIVEMQ_USERNAME,
+    HIVEMQ_PASSWORD: process.env.HIVEMQ_PASSWORD,
+    HIVEMQ_CLUSTER_URL: process.env.HIVEMQ_CLUSTER_URL,
+
     public: {
       SUPABASE_REFERENCE_ID: process.env.SUPABASE_REFERENCE_ID // for localStorage
     }

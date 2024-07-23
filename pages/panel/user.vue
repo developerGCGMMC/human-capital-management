@@ -34,8 +34,8 @@
     <div class="flex flex-col gap-3">
         <span>User Panel</span>
 
-        <span v-if="user">Hey {{ user?.id }} !</span>
-        <span>Local: {{ storage.local.user?.id }}</span>
+        <!-- <span v-if="user">Hey {{ user?.id }} !</span>
+        <span>Local: {{ storage.local.user?.id }}</span> -->
 
         <Button @click="signOut()" type="button" label="Signout" outlined
             class="py-3 text-base" />

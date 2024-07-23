@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     try {
         const { user_id } = await readBody(event);
 
-        const user_auth = await prisma.Users.findFirst({
+        const user_auth = await prisma.Users.findUnique({
             select: {
                 userType: true,
                 userEmail: true,
@@ -18,10 +18,15 @@ export default defineEventHandler(async (event) => {
                         firstName: true,
                         middleName: true,
                         genealogySuffix: true,
-                        appointmentStatus: true,
+                        appointmentID: true,
                         employeeID: true,
                         biometricsNo: true,
                         activeStatus: true,
+                        appointmentStatus: {
+                            select: {
+                                appointmentName: true
+                            }
+                        },
                         service: {
                             select: {
                                 serviceName: true

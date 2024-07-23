@@ -1,5 +1,5 @@
 <script setup>
-    import Password from 'primevue/password';
+    const user = useSupabaseUser();
 
     const { isEmail, isAlphanumeric }  = useString();
     const { signInWithEmail }  = useSupabaseAuthentication();
@@ -15,13 +15,17 @@
         sign_in: {
             email: null,
             password: null
-        }
+        },
+        show_password: false
     });
     const error = reactive({
         validation: {
             status: null,
             message: null
         }
+    });
+    const show = reactive({
+        password: false
     });
 
     // ! ----------------------------------------------------------------------------------------------------
@@ -68,8 +72,6 @@
     // ! ----------------------------------------------------------------------------------------------------
 
     onMounted(() => {
-        const user = useSupabaseUser();
-
         watchEffect(async () => {
             if(user.value) {
                 await navigateTo('/panel/user');
@@ -101,27 +103,27 @@
                     </div>
                     <div class="w-full md:w-1/3 flex items-center">
                         <div class="w-full flex flex-col gap-1">
-                            <label for="email" class="text-sm md:text-base">Email</label>
+                            <label for="form_email" class="text-sm md:text-base">Email</label>
                             <InputGroup>
-                                <InputText v-model="form.sign_in.email" @keyup.enter="validateLogin()" inputId="email" />
+                                <InputText v-model="form.sign_in.email" @keyup.enter="validateLogin()" inputId="form_email" />
                                 <InputGroupAddon>
                                     <i class="pi pi-user"></i>
                                 </InputGroupAddon>
                             </InputGroup>
 
-                            <label for="password" class="text-sm md:text-base">Password</label>
-                            <!-- <Password v-model="form.sign_in.password" @keyup.enter="validateLogin()" toggleMask :feedback="false" inputId="password" inputClass="w-full" /> -->
+                            <label for="form_password" class="text-sm md:text-base">Password</label>
                             <InputGroup>
-                                <InputText v-model="form.sign_in.password" @keyup.enter="validateLogin()" inputId="password" />
-                                <InputGroupAddon>
-                                    <i class="pi pi-eye-slash"></i>
+                                <InputText v-if="!show.password" v-model="form.sign_in.password" type="password" @keyup.enter="validateLogin()" inputId="form_password" />
+                                <InputText v-else v-model="form.sign_in.password" type="text" @keyup.enter="validateLogin()" inputId="form_password" />
+
+                                <InputGroupAddon @click="show.password = !show.password" class="cursor-pointer">
+                                    <i :class="!show.password ? 'pi pi-eye-slash' : 'pi pi-eye'" />
                                 </InputGroupAddon>
                             </InputGroup>
 
                             <ProgressBar v-if="loading.sign_in" mode="indeterminate" style="height: 4px"></ProgressBar>
 
-                            <Button @click="validateLogin()" type="button" label="Login" raised
-                                class="w-full py-3 text-base mt-5" />
+                            <Button @click="validateLogin()" type="button" label="Login" raised class="w-full py-3 text-base mt-5" />
                             <Divider align="center" type="solid">
                                 <small>Not yet registered?</small>
                             </Divider>

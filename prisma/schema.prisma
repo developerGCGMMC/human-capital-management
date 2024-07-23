@@ -23,6 +23,8 @@ model Services {
 
   employees Employees[] @relation("services-employees")
 
+  serviceSignatories ServiceSignatories[] @relation("services-service_signatories")
+
   @@map("services")
   @@schema("public")
 }
@@ -74,9 +76,9 @@ model Employees {
   middleName      String? @map("middle_name")
   genealogySuffix String? @map("genealogy_suffix")
 
-  appointmentStatus AppointmentStatus @default(permanent) @map("appointment_status")
-  employeeID        String?           @unique @map("employee_id")
-  biometricsNo      String?           @unique @map("biometrics_no")
+  appointmentID String? @default("permanent") @map("appointment_id")
+  employeeID    String? @unique @map("employee_id")
+  biometricsNo  String? @unique @map("biometrics_no")
 
   activeStatus ActiveStatus @default(active) @map("active_status")
 
@@ -90,6 +92,8 @@ model Employees {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   users Users? @relation("employees-users")
+
+  appointmentStatus AppointmentStatus? @relation("employees-appointment_status", fields: [appointmentID], references: [id])
 
   employeeEmployment     EmployeeEmployment?     @relation("employees-employee_employment")
   employeeProfile        EmployeeProfile?        @relation("employees-employee_profile")
@@ -106,6 +110,16 @@ model Employees {
 
   @@unique([lastName, firstName, middleName, genealogySuffix])
   @@map("employees")
+  @@schema("public")
+}
+
+model AppointmentStatus {
+  id              String @id @map("id")
+  appointmentName String @map("appointment_name")
+
+  employees Employees[] @relation("employees-appointment_status")
+
+  @@map("appointment_status")
   @@schema("public")
 }
 
@@ -191,7 +205,7 @@ model EmployeeContactAddress {
 
 model EmployeeSalary {
   id          String @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  employeesID String @map("employees_id") @db.Uuid
+  employeesID String @unique @map("employees_id") @db.Uuid
 
   salaryGrade     String?  @map("salary_grade")
   salary          String?  @map("salary")
@@ -203,15 +217,6 @@ model EmployeeSalary {
   employees Employees @relation("employees-employee_salary", fields: [employeesID], references: [id])
 
   @@map("employee_salary")
-  @@schema("public")
-}
-
-enum AppointmentStatus {
-  permanent
-  contract_of_service
-  job_order
-  temporary
-
   @@schema("public")
 }
 
@@ -326,17 +331,22 @@ enum UserType {
 // ! ----------------------------------------------------------------------------------------------------
 
 model Schedules {
-  id               String       @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
-  scheduleName     String       @map("schedule_name")
-  scheduleCategory String       @map("schedule_category")
-  totalHours       String       @map("total_hours")
-  firstHours       String       @map("first_hours")
-  secondHours      String?      @map("second_hours")
-  firstIn          String       @map("first_in")
-  firstOut         String       @map("first_out")
-  secondIn         String?      @map("second_in")
-  secondOut        String?      @map("second_out")
-  activeStatus     ActiveStatus @default(active) @map("active_status")
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  scheduleName     String  @map("schedule_name")
+  scheduleCategory String  @map("schedule_category")
+  shortName        String  @map("short_name")
+  scheduleLegend   String? @map("schedule_legend")
+  scheduleClass    String? @map("schedule_class")
+
+  totalHours  String  @map("total_hours")
+  firstHours  String  @map("first_hours")
+  secondHours String? @map("second_hours")
+  firstIn     String  @map("first_in")
+  firstOut    String  @map("first_out")
+  secondIn    String? @map("second_in")
+  secondOut   String? @map("second_out")
+
+  activeStatus ActiveStatus @default(active) @map("active_status")
 
   employeeSchedules EmployeeSchedules[] @relation("schedules-employee_schedules")
 
@@ -476,22 +486,16 @@ enum DayPeriod {
 
 // ! ----------------------------------------------------------------------------------------------------
 
-model UserInfo {
-  userID  Int @id @map("user_id")
-  badgeNo Int @map("badge_no")
+model ServiceSignatories {
+  id            String  @id @default(dbgenerated("gen_random_uuid()")) @map("id") @db.Uuid
+  signatoryName String  @map("signatory_name")
+  serviceID     String? @map("service_id") @db.Uuid
 
-  @@map("xx_user_info")
+  service Services? @relation("services-service_signatories", fields: [serviceID], references: [id])
+
+  @@unique([serviceID])
+  @@map("service_signatories")
   @@schema("public")
 }
 
-model CheckInOut {
-  id           Int     @id @default(autoincrement())
-  userID       Int     @map("user_id")
-  checkTime    String  @map("check_time")
-  checkType    String  @map("check_type")
-  biometricsNo String? @map("biometrics_no")
-
-  @@unique([userID, checkTime, checkType, biometricsNo])
-  @@map("xx_check_in_out")
-  @@schema("public")
-}
+// ! ----------------------------------------------------------------------------------------------------

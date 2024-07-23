@@ -27,6 +27,10 @@
             message: null
         }
     });
+    const show = reactive({
+        password: false,
+        confirm: false
+    });
 
     // ! ----------------------------------------------------------------------------------------------------
 
@@ -130,38 +134,47 @@
                     </div>
                     <div class="w-full md:w-1/3 flex items-center">
                         <div class="w-full flex flex-col gap-1">
-                            <label for="email" class="text-sm md:text-base">Email</label>
+                            <label for="form_email" class="text-sm md:text-base">Email</label>
                             <InputGroup>
-                                <InputText v-model="form.sign_up.email" inputId="email" />
+                                <InputText v-model="form.sign_up.email" inputId="form_email" />
                                 <InputGroupAddon>
                                     <i class="pi pi-at"></i>
                                 </InputGroupAddon>
                             </InputGroup>
 
-                            <label for="password" class="text-sm md:text-base">Password</label>
-                            <Password v-model="form.sign_up.password" toggleMask inputId="password" inputClass="w-full">
-                                <template #header>
-                                    <h6>Pick a password</h6>
-                                </template>
-                                <template #footer>
-                                    <Divider />
-                                    <p class="mt-2">Requirements:</p>
-                                    <ul class="pl-2 ml-2 mt-0" style="line-height: 1.5">
-                                        <li>At least one lowercase [a-z]</li>
-                                        <li>At least one uppercase [A-Z]</li>
-                                        <li>At least one numeric [0-9]</li>
-                                        <li>Between 8 to 15 characters</li>
-                                    </ul>
-                                </template>
-                            </Password>
+                            <label for="form_password" class="text-sm md:text-base">Password</label>
+                            <InputGroup>
+                                <InputText v-if="!show.password" v-model="form.sign_up.password" type="password" inputId="form_password" />
+                                <InputText v-else v-model="form.sign_up.password" type="text" inputId="form_password" />
 
-                            <label for="confirm_password" class="text-sm md:text-base">Confirm Password</label>
-                            <Password v-model="form.sign_up.confirm" toggleMask :feedback="false" inputId="confirm_password" inputClass="w-full"></Password>
+                                <InputGroupAddon @click="show.password = !show.password" class="cursor-pointer">
+                                    <i :class="!show.password ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+                                </InputGroupAddon>
+                            </InputGroup>
+
+                            <label for="form_confirm" class="text-sm md:text-base">Confirm Password</label>
+                            <InputGroup>
+                                <InputText v-if="!show.confirm" v-model="form.sign_up.confirm" type="password" inputId="form_confirm" />
+                                <InputText v-else v-model="form.sign_up.confirm" type="text" inputId="form_confirm" />
+
+                                <InputGroupAddon @click="show.confirm = !show.confirm" class="cursor-pointer">
+                                    <i :class="!show.confirm ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+                                </InputGroupAddon>
+                            </InputGroup>
+
+                            <div class="text-sm">
+                                <p>Password requirements:</p>
+                                <ul class="list-disc list-inside">
+                                    <li>At least one lowercase [<span class="font-bold">a-z</span>]</li>
+                                    <li>At least one uppercase [<span class="font-bold">A-Z]</span></li>
+                                    <li>At least one numeric [<span class="font-bold">0-9]</span></li>
+                                    <li>Between <span class="font-bold">8 to 15</span> characters</li>
+                                </ul>
+                            </div>
 
                             <ProgressBar v-if="loading.sign_up" mode="indeterminate" style="height: 4px"></ProgressBar>
 
-                            <Button @click="validateRegistration($event)" type="button" label="Register" raised :disabled="loading.sign_up"
-                                class="w-full py-3 text-base mt-5" />
+                            <Button @click="validateRegistration($event)" type="button" label="Register" raised :disabled="loading.sign_up" class="w-full py-3 text-base mt-5" />
                             <Divider align="center" type="solid">
                                 <small>Already a user?</small>
                             </Divider>
@@ -169,7 +182,6 @@
                                 <Button type="button" label="Login" outlined
                                     class="w-full py-3 text-base" />
                             </NuxtLink>
-
                             <NuxtLink to="/" class="mt-5">
                                 <Button type="button" label="back to Home page" text
                                     class="w-full py-5 text-base" />

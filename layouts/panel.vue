@@ -1,5 +1,5 @@
 <script setup>
-    const runtimeConfig = useRuntimeConfig();
+    const user = useSupabaseUser();
 
     const { signOut }  = useSupabaseAuthentication();
 
@@ -53,10 +53,10 @@
                     },
                     items: [
                         {
-                            label: 'Time Management',
+                            label: 'Time Keeping',
                             icon: 'pi pi-book',
                             command: () => {
-                                navigateTo('/admin/time-management');
+                                navigateTo('/admin/time-keeping');
                             }
                         },
                         {
@@ -82,6 +82,13 @@
                             }
                         },
                         {
+                            label: 'Biometrics Uploader',
+                            icon: 'pi pi-cloud-upload',
+                            command: () => {
+                                navigateTo('/admin/biometrics-uploader');
+                            }
+                        },
+                        {
                             label: 'Reports',
                             icon: 'pi pi-chart-bar'
                         }
@@ -90,8 +97,6 @@
             ]
         }
     ]);
-
-    const overlaypanel_ref = ref();
 
     const sidebar_visibility = ref(false);
     const sidebar_items = ref([
@@ -135,11 +140,11 @@
             label: 'Administrator',
             items: [
                 {
-                    label: 'Time Management',
+                    label: 'Time Keeping',
                     icon: 'pi pi-book',
                     shortcut: '✨',
                     command: () => {
-                        navigateTo('/admin/time-management');
+                        navigateTo('/admin/time-keeping');
                     }
                 },
                 {
@@ -166,6 +171,14 @@
                     shortcut: '❎',
                     command: () => {
                         navigateTo('/test');
+                    }
+                },
+                {
+                    label: 'Biometrics Uploader',
+                    icon: 'pi pi-cloud-upload',
+                    shortcut: '✨',
+                    command: () => {
+                        navigateTo('/admin/biometrics-uploader');
                     }
                 },
                 {
@@ -197,41 +210,98 @@
         }
     ]);
 
-    const storage_user = ref(null);
-    const user_auth = ref();
+    const avatar_link = 'https://res.cloudinary.com/dtcgyjwzt/image/upload/v1709782922/avatar/employees/';
 
-    watch(() => storage_user?.value?.id, async () => {
-        const { data, error } = await useFetch('/api/users/auth', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                user_id: storage_user.value.id
-            })
-        });
+    // ! ----------------------------------------------------------------------------------------------------
 
-        if(error.value) {
-            const { statusCode, statusMessage } = error?.value;
-
-            console.groupCollapsed('Error Response: /api/users/auth')
-            console.error(statusCode+': '+statusMessage);
-            console.groupEnd();
-
-            return;
-        }
-
-        // console.log(data.value.userEmail);
-        user_auth.value = data.value;
+    const pendings = reactive({
+        fetch_user_auth: false
     });
+
+    // ! ----------------------------------------------------------------------------------------------------
+
+    const user_auth = ref(null);
+
+    const { execute: fetchUsersAuth } = await useFetch('/api/users/auth', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            user_id: user?.value?.id
+        }),
+        immediate: false,
+        watch: false,
+
+        async onRequest() {
+            pendings.fetch_user_auth = true;
+        },
+        async onRequestError({ error }) {
+            toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: '[Fetch Request Error] '+error,
+                life: 5000
+            });
+        },
+        async onResponse({ _request, response }) {
+            // console.log('[onResponse] fetchUsersAuth: '+JSON.stringify(response._data));
+
+            user_auth.value = response._data;
+
+            pendings.fetch_user_auth = false;
+        },
+        async onResponseError({ response }) {
+            toast.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: '[Fetch Response Error] '+response.status+': '+response.statusText,
+                life: 5000
+            });
+        }
+    });
+
+    // ! ----------------------------------------------------------------------------------------------------
 
     onMounted(async () => {
-        let storage_auth = JSON.parse(localStorage.getItem('sb-'+runtimeConfig.public.SUPABASE_REFERENCE_ID+'-auth-token'));
-
-        // console.log(storage_auth);
-
-        storage_user.value = storage_auth.user;
+        if(user.value) {
+            fetchUsersAuth();
+        }
     });
+
+    // const storage_user = ref(null);
+    // const user_auth = ref();
+
+    // watch(() => storage_user?.value?.id, async () => {
+    //     const { data, error } = await useFetch('/api/users/auth', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Accept': 'application/json'
+    //         },
+    //         body: JSON.stringify({
+    //             user_id: storage_user.value.id
+    //         })
+    //     });
+
+    //     if(error.value) {
+    //         const { statusCode, statusMessage } = error?.value;
+
+    //         console.groupCollapsed('Error Response: /api/users/auth')
+    //         console.error(statusCode+': '+statusMessage);
+    //         console.groupEnd();
+
+    //         return;
+    //     }
+
+    //     // console.log(data.value.userEmail);
+    //     user_auth.value = data.value;
+    // });
+
+    // onMounted(async () => {
+    //     let storage_auth = JSON.parse(localStorage.getItem('sb-'+runtimeConfig.public.SUPABASE_REFERENCE_ID+'-auth-token'));
+
+    //     storage_user.value = storage_auth.user;
+    // });
 </script>
 <template>
     <div class="w-full min-h-screen">
@@ -259,25 +329,10 @@
             <template #end>
                 <div @click="sidebar_visibility = true" class="flex flex-row items-center gap-2 cursor-pointer">
                     <span v-if="user_auth">{{ user_auth?.employee?.firstName }} {{ user_auth?.employee?.lastName }}</span>
-                    <NuxtImg provider="cloudinary"
-                        :src="'/avatar/employees/'+user_auth?.employee?.biometricsNo+'.jpg'"
-                        height="30"
-                        :modifiers="{ roundCorner: 'max' }"
-                        fit="cover" />
+                    <Avatar v-if="user_auth?.employee?.biometricsNo" :image="avatar_link+''+user_auth?.employee?.biometricsNo+'.jpg'" size="large" shape="circle" class="border-2" style="border-color: var(--primary-300);" />
                 </div>
             </template>
         </Menubar>
-
-        <OverlayPanel ref="overlaypanel_ref" class="w-7/12 sm:w-6/12 md:w-4/12 lg:w-2/12">
-            <div class="flex flex-col gap-4">
-                <div class="flex items-center justify-center">
-                    <span v-if="user_auth" class="font-medium">{{ user_auth.userEmail }}</span>
-                </div>
-                <div>
-                    <Button @click="signOut()" label="Logout" icon="pi pi-sign-out" iconPos="right" class="w-full" />
-                </div>
-            </div>
-        </OverlayPanel>
 
         <Sidebar v-model:visible="sidebar_visibility" position="right" :blockScroll="true">
             <template #container>

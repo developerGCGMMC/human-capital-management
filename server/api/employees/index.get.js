@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
                 firstName: true,
                 middleName: true,
                 genealogySuffix: true,
-                appointmentStatus: true,
+                appointmentID: true,
                 employeeID: true,
                 biometricsNo: true,
                 activeStatus: true,
@@ -62,18 +62,7 @@ export default defineEventHandler(async (event) => {
 
         const employees_services_sections_units = employees.reduce((accumulator, currentEmployee) => {
             accumulator.push({
-                id: currentEmployee.id,
-                lastName: currentEmployee.lastName,
-                firstName: currentEmployee.firstName,
-                middleName: currentEmployee.middleName,
-                genealogySuffix: currentEmployee.genealogySuffix,
-                appointmentStatus: currentEmployee.appointmentStatus,
-                employeeID: currentEmployee.employeeID,
-                biometricsNo: currentEmployee.biometricsNo,
-                activeStatus: currentEmployee.activeStatus,
-                serviceID: currentEmployee.serviceID,
-                sectionID: currentEmployee.sectionID,
-                unitID: currentEmployee.unitID,
+                ...currentEmployee,
                 service: services.reduce((accumulator, currentService) => {
                     if(currentEmployee.serviceID && currentEmployee.serviceID === currentService.id) {
                         accumulator = currentService
@@ -98,9 +87,8 @@ export default defineEventHandler(async (event) => {
             });
 
             return accumulator;
-        }, []);
-
-        const sorted_employees = employees_services_sections_units.sort((prev, next) => {
+        }, [])
+        .sort((prev, next) => {
             return prev.lastName > next.lastName
                 ? 1
                 : ((prev.lastName < next.lastName)
@@ -112,11 +100,17 @@ export default defineEventHandler(async (event) => {
                             : 0)))
         });
 
-        // return {
-        //     data: sorted_employees
-        // };
-        return sorted_employees;
+        return employees_services_sections_units;
     } catch(error) {
+        if(error instanceof Prisma.PrismaClientKnownRequestError || error instanceof Prisma.PrismaClientUnknownRequestError
+            || error instanceof Prisma.PrismaClientRustPanicError || error instanceof Prisma.PrismaClientInitializationError
+            || error instanceof Prisma.PrismaClientValidationError) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'Database connection, authentication, validation etc. error'
+            });
+        }
+
         console.error(error);
 
         return error;

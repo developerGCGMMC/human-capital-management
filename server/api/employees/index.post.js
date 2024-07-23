@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
         // ! ----------------------------------------------------------------------------------------------------
 
         if(!selected_employee.lastName || !selected_employee.firstName
-            || !selected_employee.appointmentStatus || !selected_employee.employeeID || !selected_employee.biometricsNo
+            || !selected_employee.appointmentID || !selected_employee.employeeID || !selected_employee.biometricsNo
             || !selected_employee.serviceID || !selected_employee.sectionID) {
             throw createError({
                 statusCode: 400,
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
                         firstName: selected_employee.firstName,
                         middleName: selected_employee.middleName,
                         genealogySuffix: selected_employee.genealogySuffix,
-                        appointmentStatus: selected_employee.appointmentStatus,
+                        appointmentID: selected_employee.appointmentID,
                         employeeID: selected_employee.employeeID,
                         biometricsNo: selected_employee.biometricsNo,
                         serviceID: selected_employee.serviceID,
@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
                         firstName: true,
                         middleName: true,
                         genealogySuffix: true,
-                        appointmentStatus: true,
+                        appointmentID: true,
                         employeeID: true,
                         biometricsNo: true,
                         serviceID: true,
@@ -117,7 +117,7 @@ export default defineEventHandler(async (event) => {
                         firstName: selected_employee.firstName,
                         middleName: selected_employee.middleName,
                         genealogySuffix: selected_employee.genealogySuffix,
-                        appointmentStatus: selected_employee.appointmentStatus,
+                        appointmentID: selected_employee.appointmentID,
                         employeeID: selected_employee.employeeID,
                         biometricsNo: selected_employee.biometricsNo,
                         serviceID: selected_employee.serviceID,
@@ -130,7 +130,7 @@ export default defineEventHandler(async (event) => {
                         firstName: true,
                         middleName: true,
                         genealogySuffix: true,
-                        appointmentStatus: true,
+                        appointmentID: true,
                         employeeID: true,
                         biometricsNo: true,
                         serviceID: true,

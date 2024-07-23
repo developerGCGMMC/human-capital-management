@@ -1,7 +1,5 @@
 <script setup>
-    import { ref } from "vue";
-
-    const user = useSupabaseUser();
+    const user = ref(null);
 
     // ! ----------------------------------------------------------------------------------------------------
 
@@ -553,6 +551,13 @@
     // ! ----------------------------------------------------------------------------------------------------
 
     onMounted(() => {
+        const supabaseUser = useSupabaseUser();
+
+        watchEffect(async () => {
+            if(supabaseUser.value) {
+                user.value = supabaseUser.value;
+            }
+        });
     });
 </script>
 <template>
@@ -595,6 +600,19 @@
                     </NuxtLink>
                     <NuxtLink to="/register">
                         <Button type="button" label="Register" icon="pi pi-user-plus" text raised
+                            class="py-3 md:py-6 px-6 md:px-12 text-base md:text-xl"
+                            icon-class="text-lg md:text-xl" />
+                    </NuxtLink>
+                </div>
+                <div v-else
+                    class="flex justify-center md:justify-start gap-4">
+                    <NuxtLink to="/panel/user">
+                        <Button type="button" label="User Panel" icon="pi pi-id-card" text raised
+                            class="py-3 md:py-6 px-10 md:px-16 text-base md:text-xl"
+                            icon-class="text-lg md:text-xl" />
+                    </NuxtLink>
+                    <NuxtLink to="/panel/administrator">
+                        <Button type="button" label="Administrator Panel" icon="pi pi-chart-bar" text raised
                             class="py-3 md:py-6 px-6 md:px-12 text-base md:text-xl"
                             icon-class="text-lg md:text-xl" />
                     </NuxtLink>

@@ -22,12 +22,11 @@
     const forms = reactive({
         selected_employee: {
             id: null,
-
             lastName: null,
             firstName: null,
             middleName: null,
             genealogySuffix: null,
-            appointmentStatus: null,
+            appointmentID: null,
             employeeID: null,
             biometricsNo: null,
             serviceID: null,
@@ -46,6 +45,7 @@
     const table_dropdown_options = {
         employment_status: [
             { id: 'permanent', name: 'Permanent' },
+            { id: 'casual_with_appointment', name: 'Casual with Appointment' },
             { id: 'contract_of_service', name: 'Contract of Service' },
             { id: 'job_order', name: 'Job Order' },
             { id: 'temporary', name: 'Temporary' }
@@ -59,6 +59,7 @@
         genealogy_suffix: ['Sr.', 'Jr.', 'II', 'III', 'IV'],
         employment_status: [
             { id: 'permanent', name: 'Permanent' },
+            { id: 'casual_with_appointment', name: 'Casual with Appointment' },
             { id: 'contract_of_service', name: 'Contract of Service' },
             { id: 'job_order', name: 'Job Order' },
             { id: 'temporary', name: 'Temporary' }
@@ -84,18 +85,18 @@
         }
     });
 
-    table_dropdown_options.service_names = data_offices.value.data.service_names;
-    table_dropdown_options.section_names = data_offices.value.data.section_names;
-    table_dropdown_options.unit_names = data_offices.value.data.unit_names;
+    table_dropdown_options.service_names = data_offices.value.service_names;
+    table_dropdown_options.section_names = data_offices.value.section_names;
+    table_dropdown_options.unit_names = data_offices.value.unit_names;
 
-    form_dropdown_options.service_ids = data_offices.value.data.service_ids;
-    form_dropdown_options.section_ids = data_offices.value.data.section_ids;
-    form_dropdown_options.unit_ids = data_offices.value.data.unit_ids;
+    form_dropdown_options.service_ids = data_offices.value.service_ids;
+    form_dropdown_options.section_ids = data_offices.value.section_ids;
+    form_dropdown_options.unit_ids = data_offices.value.unit_ids;
 
-    form_autocomplete_suggestions.office_ids = data_offices.value.data.office_ids;
+    form_autocomplete_suggestions.office_ids = data_offices.value.office_ids;
 
-    data_maps.office_ids = data_offices.value.data.office_ids;
-    data_maps.office_map = data_offices.value.data.office_map;
+    data_maps.office_ids = data_offices.value.office_ids;
+    data_maps.office_map = data_offices.value.office_map;
 
     // ! ----------------------------------------------------------------------------------------------------
 
@@ -112,7 +113,7 @@
         forms.selected_employee.firstName = event.data.firstName;
         forms.selected_employee.middleName = event.data.middleName;
         forms.selected_employee.genealogySuffix = event.data.genealogySuffix;
-        forms.selected_employee.appointmentStatus = event.data.appointmentStatus;
+        forms.selected_employee.appointmentID = event.data.appointmentID;
         forms.selected_employee.employeeID = event.data.employeeID;
         forms.selected_employee.biometricsNo = event.data.biometricsNo;
         forms.selected_employee.serviceID = event.data.serviceID;
@@ -134,7 +135,7 @@
         forms.selected_employee.firstName = null;
         forms.selected_employee.middleName = null;
         forms.selected_employee.genealogySuffix = null;
-        forms.selected_employee.appointmentStatus = null;
+        forms.selected_employee.appointmentID = null;
         forms.selected_employee.employeeID = null;
         forms.selected_employee.biometricsNo = null;
         forms.selected_employee.serviceID = null;
@@ -152,7 +153,7 @@
     const initFilters = () => {
         filters.value = {
             global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-            appointmentStatus: { value: null, matchMode: FilterMatchMode.EQUALS },
+            appointmentID: { value: null, matchMode: FilterMatchMode.EQUALS },
             'service.serviceName': { value: null, matchMode: FilterMatchMode.EQUALS },
             'section.sectionName': { value: null, matchMode: FilterMatchMode.EQUALS },
             'unit.unitName': { value: null, matchMode: FilterMatchMode.EQUALS }
@@ -248,7 +249,7 @@
         forms.selected_employee.firstName = selected_employee.value.firstName;
         forms.selected_employee.middleName = selected_employee.value.middleName;
         forms.selected_employee.genealogySuffix = selected_employee.value.genealogySuffix;
-        forms.selected_employee.appointmentStatus = selected_employee.value.appointmentStatus;
+        forms.selected_employee.appointmentID = selected_employee.value.appointmentID;
         forms.selected_employee.employeeID = selected_employee.value.employeeID;
         forms.selected_employee.biometricsNo = selected_employee.value.biometricsNo;
         forms.selected_employee.serviceID = selected_employee.value.serviceID;
@@ -351,7 +352,7 @@
 
     const processEmployee = () => {
         if(!forms.selected_employee.lastName || !forms.selected_employee.firstName
-            || !forms.selected_employee.appointmentStatus || !forms.selected_employee.employeeID || !forms.selected_employee.biometricsNo
+            || !forms.selected_employee.appointmentID || !forms.selected_employee.employeeID || !forms.selected_employee.biometricsNo
             || !forms.selected_employee.serviceID || !forms.selected_employee.sectionID) {
             toast.add({
                 severity: 'error',
@@ -387,7 +388,7 @@
                     firstName: toTitleCase(forms.selected_employee.firstName),
                     middleName: forms.selected_employee.middleName ? toTitleCase(forms.selected_employee.middleName) : null,
                     genealogySuffix: forms.selected_employee.genealogySuffix,
-                    appointmentStatus: forms.selected_employee.appointmentStatus,
+                    appointmentID: forms.selected_employee.appointmentID,
                     employeeID: forms.selected_employee.employeeID,
                     biometricsNo: forms.selected_employee.biometricsNo,
                     serviceID: forms.selected_employee.serviceID,
@@ -597,13 +598,14 @@
                                     <p>{{ slotProps.data.lastName }}, {{ slotProps.data.firstName }} {{ slotProps.data.middleName }} {{ slotProps.data.genealogySuffix }}</p>
                                 </template>
                             </Column>
-                            <Column field="appointmentStatus" header="Appointment Status" :showFilterMenu="false" :showClearButton="false" headerStyle="background-color: var(--primary-50);" filterHeaderStyle="background-color: var(--primary-50);">
+                            <Column field="appointmentID" header="Appointment Status" :showFilterMenu="false" :showClearButton="false" headerStyle="background-color: var(--primary-50);" filterHeaderStyle="background-color: var(--primary-50);">
                                 <template #body="slotProps">
-                                    <p v-if="slotProps.data.appointmentStatus == 'permanent'">Permanent</p>
-                                    <p v-else-if="slotProps.data.appointmentStatus == 'contract_of_service'">Contract of Service</p>
-                                    <p v-else-if="slotProps.data.appointmentStatus == 'job_order'">Job Order</p>
-                                    <p v-else-if="slotProps.data.appointmentStatus == 'temporary'">Temporary</p>
-                                    <p v-else>{{ slotProps.data.appointmentStatus }}</p>
+                                    <p v-if="slotProps.data.appointmentID == 'permanent'">Permanent</p>
+                                    <p v-else-if="slotProps.data.appointmentID == 'casual_with_appointment'">Casual with Appointment</p>
+                                    <p v-else-if="slotProps.data.appointmentID == 'contract_of_service'">Contract of Service</p>
+                                    <p v-else-if="slotProps.data.appointmentID == 'job_order'">Job Order</p>
+                                    <p v-else-if="slotProps.data.appointmentID == 'temporary'">Temporary</p>
+                                    <p v-else>{{ slotProps.data.appointmentID }}</p>
                                 </template>
                                 <template #filter="{ filterModel, filterCallback }">
                                     <Dropdown v-model="filterModel.value" @change="filterCallback()" :options="table_dropdown_options.employment_status" optionValue="id" optionLabel="name" placeholder="Filter" :showClear="true" />
@@ -659,7 +661,7 @@
         </div>
 
         <div class="col-span-12 md:col-span-3 order-first md:order-last">
-            <Card style="overflow: hidden;">
+            <Card style="overflow: hidden;" class="border-2">
                 <template #header>
                     <NuxtImg v-if="forms.selected_employee.biometricsNo" provider="cloudinary"
                         :src="'/avatar/employees/'+forms.selected_employee.biometricsNo+'.jpg'"
@@ -689,8 +691,8 @@
                         <label for="genealogySuffix">Genealogy Suffix</label>
                         <Dropdown id="genealogySuffix" v-model="forms.selected_employee.genealogySuffix" :options="form_dropdown_options.genealogy_suffix" :loading="pendings.insert_employee" showClear />
 
-                        <label for="appointmentStatus">Appointment Status<span class="inline-block align-top text-red-500">*</span></label>
-                        <Dropdown id="appointmentStatus" v-model="forms.selected_employee.appointmentStatus" :options="form_dropdown_options.employment_status" optionValue="id" optionLabel="name" :loading="pendings.insert_employee" />
+                        <label for="appointmentID">Appointment Status<span class="inline-block align-top text-red-500">*</span></label>
+                        <Dropdown id="appointmentID" v-model="forms.selected_employee.appointmentID" :options="form_dropdown_options.employment_status" optionValue="id" optionLabel="name" :loading="pendings.insert_employee" />
 
                         <label for="employeeID">Employee ID<span class="inline-block align-top text-red-500">*</span></label>
                         <Skeleton v-if="pendings.insert_employee" id="employeeID" height="2.4rem" />
